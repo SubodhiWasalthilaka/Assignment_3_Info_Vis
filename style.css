@@ -1,7 +1,4 @@
-﻿/* ════════════════════════════════════════════
-   Task 3 — Linked Brushing
-   style.css
-════════════════════════════════════════════ */
+﻿
 
 * {
     box-sizing: border-box;
@@ -31,7 +28,6 @@ h2 {
     color: #555;
 }
 
-/* ── Two panel layout ── */
 .row {
     display: flex;
 }
@@ -57,7 +53,7 @@ h2 {
     overflow: auto;
 }
 
-/* ── PCP axis styles ── */
+
 .axis line,
 .axis path {
     stroke: #bbb;
@@ -75,7 +71,7 @@ h2 {
     font-weight: bold;
 }
 
-/* ── PCP player lines ── */
+
 .pcp-line {
     fill: none;
     stroke: #2a75d3;
@@ -83,7 +79,7 @@ h2 {
     stroke-opacity: 0.4;
 }
 
-/* ── Brush handle ── */
+
 .brush .selection {
     fill: #34495e;
     fill-opacity: 0.25;

@@ -1,8 +1,4 @@
-﻿// ════════════════════════════════════════════════════════════════
-//  TASK 3 — Linked Brushing (PCP ↔ SPLOM)
-//  Combines Task 1 (PCP) + Task 2 (SPLOM)
-//  Linked via CustomEvents
-// ════════════════════════════════════════════════════════════════
+﻿
 
 // ── Attributes for PCP (Task 1) ──────────────────────────────
 const ATTRS = [
@@ -23,20 +19,13 @@ const metrics = [
     "mins_played"
 ];
 
-// ════════════════════════════════════════════════════════════════
-//  LINKED BRUSHING — CustomEvent broadcast
-//  Both views fire "selectionChanged" when their brush updates.
-//  The "source" tag stops infinite loops between the two views.
-// ════════════════════════════════════════════════════════════════
+
 function broadcast(selectedLabels, source) {
     window.dispatchEvent(new CustomEvent("selectionChanged", {
         detail: { labels: selectedLabels, source: source }
     }));
 }
 
-// ════════════════════════════════════════════════════════════════
-//  LOAD DATA ONCE — draw both views
-// ════════════════════════════════════════════════════════════════
 d3.json("data/football.json").then(function (data) {
 
     const players = data.nodes ? data.nodes : data;
@@ -50,9 +39,9 @@ d3.json("data/football.json").then(function (data) {
         "<p style='color:red;padding:20px'>Could not load data/football.json — make sure your local server is running.</p>";
 });
 
-// ════════════════════════════════════════════════════════════════
+
 //  TASK 1 — Vertical Parallel Coordinates Plot
-// ════════════════════════════════════════════════════════════════
+
 function drawPCP(data) {
 
     const margin = { top: 60, right: 50, bottom: 40, left: 50 };
@@ -71,13 +60,12 @@ function drawPCP(data) {
     const g = svg.append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-    // X scale: positions each vertical axis across the width
     const xScale = d3.scalePoint()
         .domain(ATTRS)
         .range([0, iW])
         .padding(0.1);
 
-    // Y scales: one per attribute
+
     const yScales = {};
     ATTRS.forEach(function (attr) {
         const values = data.map(d => +d[attr]).filter(v => !isNaN(v));
@@ -89,7 +77,7 @@ function drawPCP(data) {
             .range([iH, 0]);
     });
 
-    // Line generator
+
     function polyline(d) {
         const points = [];
         for (const attr of ATTRS) {
@@ -99,7 +87,6 @@ function drawPCP(data) {
         return points.length > 0 ? d3.line()(points) : null;
     }
 
-    // Draw player lines
     const lines = g.append("g")
         .attr("class", "lines-group")
         .selectAll("path")
@@ -112,7 +99,6 @@ function drawPCP(data) {
         .style("stroke-opacity", 0.4)
         .style("stroke-width", "1.5px");
 
-    // Draw vertical axes + brushes
     ATTRS.forEach(function (attr) {
 
         const axisG = g.append("g")
@@ -151,7 +137,7 @@ function drawPCP(data) {
             .style("stroke-dasharray", "2,2");
     });
 
-    // ── PCP brush update + broadcast ─────────────────────────────
+
     function updateHighlight() {
         const active = {};
         g.selectAll(".brush").each(function (_, i) {
@@ -159,16 +145,15 @@ function drawPCP(data) {
             if (sel) active[ATTRS[i]] = sel;
         });
 
-        // No brush active → reset all lines
+ 
         if (Object.keys(active).length === 0) {
             lines.style("stroke", "#2a75d3")
                 .style("stroke-opacity", 0.4)
                 .style("stroke-width", "1.5px");
-            broadcast([], "pcp");   // tell SPLOM: clear selection
+            broadcast([], "pcp");   
             return;
         }
 
-        // Find matching players
         const selectedLabels = [];
         lines.each(function (d) {
             const isMatched = Object.entries(active).every(function ([attr, [y0, y1]]) {
@@ -186,12 +171,12 @@ function drawPCP(data) {
             if (isMatched) selectedLabels.push(d.label);
         });
 
-        broadcast(selectedLabels, "pcp");   // ← fires CustomEvent to SPLOM
+        broadcast(selectedLabels, "pcp");  
     }
 
-    // ── Listen for selections coming FROM SPLOM ───────────────────
+ 
     window.addEventListener("selectionChanged", function (e) {
-        if (e.detail.source === "pcp") return;  // ignore own events
+        if (e.detail.source === "pcp") return;  
 
         const labels = e.detail.labels;
 
@@ -212,9 +197,9 @@ function drawPCP(data) {
     });
 }
 
-// ════════════════════════════════════════════════════════════════
+
 //  TASK 2 — Scatterplot Matrix (inverted diagonal)
-// ════════════════════════════════════════════════════════════════
+
 function drawSPLOM(nodes) {
 
     const size = 240;
@@ -259,7 +244,7 @@ function drawSPLOM(nodes) {
         .on("brush", brushed)
         .on("end", brushEnded);
 
-    // Clip paths
+   
     svg.append("defs")
         .selectAll("clipPath")
         .data(metrics)
@@ -291,7 +276,7 @@ function drawSPLOM(nodes) {
 
         const g = d3.select(this);
 
-        // Axes
+        
         if (d.j === 0) {
             g.append("g")
                 .attr("transform", `translate(0,${size - padding})`)
@@ -303,7 +288,7 @@ function drawSPLOM(nodes) {
                 .call(d3.axisLeft(y[d.y]).ticks(5));
         }
 
-        // Plot area
+        
         const plot = g.append("g")
             .attr("clip-path", `url(#clip-${d.i})`);
 
@@ -329,10 +314,10 @@ function drawSPLOM(nodes) {
                 tooltip.style("display", "none");
             });
 
-        // Brush
+        
         g.append("g").call(brush);
 
-        // Labels on inverted diagonal: col + row === metrics.length - 1
+       
         if (d.i + d.j === metrics.length - 1) {
             g.append("text")
                 .attr("x", padding + 10)
@@ -345,7 +330,7 @@ function drawSPLOM(nodes) {
         g.datum(d);
     });
 
-    // ── SPLOM brush functions + broadcast ─────────────────────────
+   
     function brushStarted() {
         if (activeBrush !== this) {
             d3.select(activeBrush).call(brush.move, null);
@@ -367,29 +352,29 @@ function drawSPLOM(nodes) {
             }
         });
 
-        // Highlight dots in SPLOM
+       
         svg.selectAll("circle")
             .attr("opacity", p => selectedLabels.includes(p.label) ? 1 : 0.08)
             .attr("stroke", p => selectedLabels.includes(p.label) ? "black" : "none")
             .attr("stroke-width", p => selectedLabels.includes(p.label) ? 2 : 0);
 
-        broadcast(selectedLabels, "splom");   // ← fires CustomEvent to PCP
+        broadcast(selectedLabels, "splom");  
     }
 
     function brushEnded(event) {
         if (event.selection) return;
 
-        // Brush cleared → reset dots
+       
         svg.selectAll("circle")
             .attr("opacity", 0.7)
             .attr("stroke", "none");
 
-        broadcast([], "splom");   // tell PCP: clear selection
+        broadcast([], "splom");  
     }
 
-    // ── Listen for selections coming FROM PCP ─────────────────────
+
     window.addEventListener("selectionChanged", function (e) {
-        if (e.detail.source === "splom") return;  // ignore own events
+        if (e.detail.source === "splom") return; 
 
         const labels = e.detail.labels;
 
@@ -406,7 +391,7 @@ function drawSPLOM(nodes) {
             .attr("stroke-width", p => labels.includes(p.label) ? 2 : 0);
     });
 
-    // ── cross() helper: builds cell data with inverted diagonal ───
+  
     function cross(a, b) {
         const result = [];
         for (let i = 0; i < a.length; i++) {
@@ -414,7 +399,7 @@ function drawSPLOM(nodes) {
                 let xMetric = a[i];
                 let yMetric = b[j];
 
-                // Inverted diagonal swap (/ instead of \)
+              
                 if (i === 0 && j === 0) {
                     xMetric = "mins_played";
                     yMetric = "mins_played";
